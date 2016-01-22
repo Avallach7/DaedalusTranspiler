@@ -69,12 +69,13 @@
 }
 
 private DaedalusFile ::= { Definition }*
-Definition ::= ( ConstDef | ClassDef | InstanceDef | VarDef | PrototypeDef | FuncDef ) ";"
-ConstDef ::= "const" TypeReference NameNode "=" Literal {pin=1}
+private Definition ::= ( ConstDef | ClassDef | InstanceDef | VarDef | PrototypeDef | FuncDef ) ";"
+ConstDef ::= "const" TypeReference NameNode [ ArrayIndex ] "=" Literal {pin=1}
 TypeReference ::= ReferenceNode | "void" | "float" | "int" | "string" | "func"
 NameNode ::= IDENTIFIER_TOKEN
 ReferenceNode ::= IDENTIFIER_TOKEN
-Literal ::= NUMBER_LITERAL | STRING_LITERAL
+Literal ::= NUMBER_LITERAL | STRING_LITERAL | ArrayLiteral
+ArrayLiteral ::= "{" [ Expression { "," Expression }* ] "}"
 ClassDef ::= "class" NameNode "{" { VarDef ";" }* "}" {pin=1}
 VarDef ::= "var" TypeReference NameNode { "," NameNode }* [ ArrayIndex ] {pin=1}
 ArrayIndex ::= "[" ( NUMBER_LITERAL | ReferenceNode ) "]" {pin=1}
@@ -83,8 +84,8 @@ PrototypeDef ::= "prototype" NameNode "(" ReferenceNode ")" "{" { Assignment ";"
 Assignment ::= Expression "=" Expression
 FuncDef ::= "func" TypeReference NameNode ParameterList StatementBlock {pin=1}
 ParameterList ::= "(" [ VarDef { "," VarDef }* ] ")" {pin=1}
-StatementBlock ::= "{" { ( VarDef | Assignment | FunctionCall | ( "return" [ Expression ] ) | IfStatement ) ";" }* "}"
-IfStatement ::= "if" "(" Expression ")" StatementBlock { "else" "if" "(" Expression ")" StatementBlock }* [ "else" StatementBlock ]
+StatementBlock ::= "{" { ( VarDef | Assignment | FunctionCall | ( "return" [ Expression ] ) | IfStatement ) [ ";" ] }* "}" {pin=1} //DIA_Pc_Thief.d contains one if without semicolon at end
+IfStatement ::= "if" Expression StatementBlock { "else" "if" Expression StatementBlock }* [ "else" StatementBlock ] {pin=1} //there is one file without parenthesis after 'if'
 FunctionCall ::= ReferenceNode "(" [ Expression { "," Expression }* ] ")"
 UnaryOperator ::= "-" | "+" | "!"
 private MathOp ::= "+" | "-" | "*" | "/" | "%"
@@ -93,4 +94,4 @@ private BitOp ::= "<<" | ">>" | "|" | "&"
 private LogicalOp ::= "&&" | "||"
 Operator ::= MathOp | RelOp | BitOp | LogicalOp | "."
 SimpleExpression ::= Literal | FunctionCall | ( ReferenceNode [ ArrayIndex ] )
-private Expression ::= [ UnaryOperator ] ( SimpleExpression { Operator Expression }* ) | ( "(" Expression ")" { Operator Expression }* )
+Expression ::= [ UnaryOperator ] ( ( SimpleExpression { Operator Expression }* ) | ( "(" Expression ")" { Operator Expression }* ) )
