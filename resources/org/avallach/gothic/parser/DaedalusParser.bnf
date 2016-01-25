@@ -1,0 +1,152 @@
+{
+	parserClass = "org.avallach.gothic.parser.DaedalusParser" //will be generated
+
+	psiClassPrefix = "Daedalus"
+	psiImplClassSuffix = "Impl"
+	psiPackage = "org.avallach.gothic.parser.psi"
+	psiImplPackage = "org.avallach.gothic.parser.psi.impl"
+
+
+	elementTypeHolderClass="org.avallach.gothic.parser.psi.DaedalusTypes" //will be generated
+	elementTypeClass = "org.avallach.gothic.parser.psi.DaedalusElementType"
+	tokenTypeClass = "org.avallach.gothic.parser.psi.DaedalusTokenType"
+	implements = "org.avallach.gothic.parser.psi.DaedalusCompositeElement"
+	extends="org.avallach.gothic.parser.psi.impl.DaedalusCompositeElementImpl"
+
+	tokens =
+	[
+	    //KEYWORDS
+	    //{
+            CLASS = "class"
+            PROTOTYPE = "prototype"
+            INSTANCE = "instance"
+            CONST = "const"
+            VAR = "var"
+            FUNC = "func"
+
+            IF = "if"
+            ELSE = "else"
+            RETURN = "return"
+	    //}
+	    //BUILTIN_TYPES
+	    //{
+            VOID = "void"
+            INT = "int"
+            FLOAT = "float"
+            STRING = "string"
+        //}
+		//BLOCK_BOUNDARIES
+		//{
+            LEFT_BRACE = "{"
+            RIGHT_BRACE = "}"
+            LEFT_PAREN = "("
+            RIGHT_PAREN = ")"
+            LEFT_BRACKET = "["
+            RIGHT_BRACKET = "]"
+        //}
+        //OPERATORS
+        //{
+            //MATH_OPS
+            //{
+                PLUS_OP = "+"
+                MINUS_OP = "-"
+                MUL_OP = "*"
+                DIV_OP = "/"
+                REM_OP = "%"
+            //}
+            //ASSIGNMENT_OPS
+            //{
+                ASSIGNMENT_OP = "="
+                ASSIGNMENT_PLUS_OP = "+="
+                ASSIGNMENT_MINUS_OP = "-="
+                ASSIGNMENT_MUL_OP = "*="
+                ASSIGNMENT_DIV_OP = "/="
+            //}
+            //COMPARISON_OPS
+            //{
+                LESS_THAN = "<"
+                GREATER_THAN = ">"
+                EQUALS_OP = "=="
+                NOT_EQUALS_OP = "!="
+                LESS_THAN_OR_EQUAL_OP = "<="
+                GREATER_THAN_OR_EQUAL_OP = ">="
+            //}
+            //BIT_OPS
+            //{
+            	BIT_SHIFT_LEFT_OP = "<<"
+            	BIT_SHIFT_RIGHT_OP = ">>"
+            	BIT_OR_OP = "|"
+            	BIT_AND_OP = "&"
+            	//XOR_OP = "^"
+            	BIT_NEGATION_OP = "~"
+            //}
+            //BOOL_OPS
+            //{
+                AND_OP = "&&"
+                OR_OP = "||"
+            	NEGATION_OP = "!"
+            //}
+        //}
+        //MISC
+        //{
+            DOT = "."
+            COMMA = ","
+            SEMICOLON = ";"
+        //}
+        //REGEX_TOKENS
+        //{
+            IDENTIFIER_TOKEN = "regexp:[a-zA-Z_][a-zA-Z0-9_]*"
+            STRING_LITERAL = "regexp:\"[^\r\n\"]*\""
+            INTEGER_LITERAL = "regexp:[0-9]+"
+            FLOAT_LITERAL = "regexp:[0-9]+\.[0-9]+"
+            LINE_COMMENT = "regexp://.*"
+            BLOCK_COMMENT = "regexp:/\*([^*]|\*+[^*/])*(\*+/)?"
+            WHITESPACE = "regexp:[ \t\r\n]+"
+		//}
+    ]
+}
+
+private DaedalusFile ::= { ( FunctionDef | ConstDef | VarDecl | ClassDef | PrototypeDef | InstanceDef ) ";" }*
+//{
+    FunctionDef ::= "func" TypeReference NameNode ParameterList StatementBlock {pin=1}
+    //{
+        ParameterList  ::= "(" [ VarDecl { "," VarDecl }* ] ")" {pin=1}
+        StatementBlock ::= "{" { FuncCall | Assignment | IfBlock | ReturnStatement | ConstDef | VarDecl | ";" }* "}"
+        //{
+            FuncCall        ::= ReferenceNode "(" [ Expression { "," Expression }* ] ")" {pin=2}
+            Assignment      ::= ComplexReference ( "=" | "+=" | "-=" | "*=" | "/=" ) Expression {pin=2}
+            IfBlock         ::= "if" Expression StatementBlock { "else" "if" Expression StatementBlock }* [ "else" StatementBlock ] {pin=1}
+            ReturnStatement ::= "return" [ Expression ] {pin=1}
+        //}
+    //}
+    ConstDef ::= "const" TypeReference NameNode [ "[" Value "]" ] ConstAssignment {pin=1}
+    //{
+        ConstAssignment ::= "=" ( Expression | ArrayLiteral )
+        ArrayLiteral    ::= "{" [ Expression { "," Expression }* ] "}"
+    //}
+    VarDecl      ::= "var" TypeReference NameNode [ "[" Value "]" ] {pin=1}
+    ClassDef     ::= "class" NameNode "{" { VarDecl ";" }* "}" {pin=1}
+    PrototypeDef ::= "prototype" NameNode "(" ReferenceNode ")" [ "{" { ( VarDecl /*| CallExp*/ ) ";" }* "}" ] {pin=1}
+    InstanceDef  ::= "instance" NameNode { "," NameNode }* "(" ReferenceNode ")" [ "{" { ( VarDecl /*| CallExp*/ ) ";" }* "}" ] {pin=1}
+//}
+
+Expression ::= LogicAnd [ "||" Expression ]
+//{
+    private LogicAnd   ::= BitOr [ "&&" LogicAnd ]
+    private BitOr      ::= BitAnd [ "|" BitOr ]
+    private BitAnd     ::= Equal [ "&" BitAnd ]
+    private Equal      ::= Comparison [ ( "==" | "!=" ) Equal ]
+    private Comparison ::= BitShift [ ( "<" | ">" | "<=" | ">=" ) Comparison ]
+    private BitShift   ::= Add [ ( "<<" | ">>" ) BitShift ]
+    private Add        ::= Mult [ ( "+" | "-" ) Add ]
+    private Mult       ::= Unary [ ( "*" | "/" | "%" ) Mult ]
+    private Unary      ::= [ "-" | "!" | "~" | "+" ] Value
+//}
+Value            ::= INTEGER_LITERAL | FLOAT_LITERAL | STRING_LITERAL | FuncCall | ComplexReference | ( "(" Expression ")" )
+ComplexReference ::= ComplexReferenceNode { "." ComplexReferenceNode }*
+//{
+    private ComplexReferenceNode ::= ReferenceNode [ "[" ( INTEGER_LITERAL | ReferenceNode ) "]" ]
+    private TypeReference        ::= ReferenceNode | "void" | "int" | "float" | "string" | "func"
+    ReferenceNode                ::= IDENTIFIER_TOKEN
+//}
+NameNode ::= IDENTIFIER_TOKEN
