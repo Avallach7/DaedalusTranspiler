@@ -112,19 +112,19 @@ private DaedalusFile ::= { ( FunctionDef | ConstDef | VarDecl | ClassDef | Proto
 		private ParameterList  ::= "(" [ VarDecl { "," VarDecl }* ] ")" {pin=1}
 		private StatementBlock ::= "{" { ( FuncCall | Assignment | IfBlock | ReturnStatement | ConstDef | VarDecl | Expression ) [ ";" ] }* "}" //Expression present because "gorn.aivar[aiv_findable]==true;", semicolon optional because "else if (Thorus_MordragKo == LOG_FAILED){}"
 		//{
-			private FuncCall		::= ReferenceNode "(" [ Expression { "," Expression }* ] ")" {pin=2} //Expression "PrintDebugInt(bodystate&(BS_MAX|BS_FLAG_INTERRUPTABLE|BS_FLAG_FREEHANDS));"
-			private Assignment	  ::= ComplexReference ( "=" | "+=" | "-=" | "*=" | "/=" ) Expression {pin=2}
-			IfBlock		 ::= "if" Expression StatementBlock { "else" "if" Expression StatementBlock }* [ "else" StatementBlock ] {pin=1}
-			ReturnStatement ::= "return" [ Expression ] {pin=1}
+			private FuncCall        ::= ReferenceNode "(" [ Expression { "," Expression }* ] ")" {pin=2} //Expression "PrintDebugInt(bodystate&(BS_MAX|BS_FLAG_INTERRUPTABLE|BS_FLAG_FREEHANDS));"
+			private Assignment      ::= ComplexReference ( "=" | "+=" | "-=" | "*=" | "/=" ) Expression {pin=2}
+			private IfBlock         ::= "if" Expression StatementBlock { "else" "if" Expression StatementBlock }* [ "else" StatementBlock ] {pin=1}
+			private ReturnStatement ::= "return" [ Expression ] {pin=1}
 		//}
 	//}
 	ConstDef ::= "const" TypeReference NameNode [ "[" SimpleValue "]" ] ConstAssignment {pin=1}
 	//{
 		private ConstAssignment ::= "=" ( Expression | ArrayLiteral )
-		private ArrayLiteral	::= "{" [ Expression { "," Expression }* ] "}"
+		private ArrayLiteral    ::= "{" [ Expression { "," Expression }* ] "}"
 	//}
-	VarDecl	  ::= "var" TypeReference NameNode [ "[" SimpleValue "]" | { "," NameNode }* ] {pin=1} //multiple names: "var int guild, level;", var array used in ClassDefs: "VAR INT move[MAX_MOVE];"
-	ClassDef	 ::= "class" NameNode "{" { VarDecl ";" }* "}" {pin=1}
+	VarDecl      ::= "var" TypeReference NameNode [ "[" SimpleValue "]" | { "," NameNode }* ] {pin=1} //multiple names: "var int guild, level;", var array used in ClassDefs: "VAR INT move[MAX_MOVE];"
+	ClassDef     ::= "class" NameNode "{" { VarDecl ";" }* "}" {pin=1}
 	PrototypeDef ::= "prototype" NameNode "(" ReferenceNode ")" "{" { ( Assignment | FuncCall ) ";" }* "}" {pin=1} //FuncCall: "prototype npc_default (c_npc) { npc_settalentvalue (self, npc_talent_1h, 0);"
 	InstanceDef  ::= "instance" NameNode "(" ReferenceNode ")" "{" { ( Assignment | FuncCall ) ";" }* "}" {pin=6} //FuncCall: "instance blackgobbomace (mst_default_blackgobbo) { set_blackgobbo_visuals();"
 	InstanceDecl ::= "instance" NameNode { "," NameNode }* "(" ReferenceNode ")" {pin=3} // multiple names and no body: "INSTANCE self,other (C_NPC);"
@@ -133,21 +133,21 @@ private DaedalusFile ::= { ( FunctionDef | ConstDef | VarDecl | ClassDef | Proto
 private Expression ::= LogicAnd [ "||" Expression ]
 //{
 	private LogicAnd   ::= BitOr [ "&&" LogicAnd ]
-	private BitOr	  ::= BitAnd [ "|" BitOr ]
-	private BitAnd	 ::= Equal [ "&" BitAnd ]
-	private Equal	  ::= Comparison [ ( "==" | "!=" ) Equal ]
+	private BitOr      ::= BitAnd [ "|" BitOr ]
+	private BitAnd     ::= Equal [ "&" BitAnd ]
+	private Equal      ::= Comparison [ ( "==" | "!=" ) Equal ]
 	private Comparison ::= BitShift [ ( "<" | ">" | "<=" | ">=" ) Comparison ]
 	private BitShift   ::= Add [ ( "<<" | ">>" ) BitShift ]
-	private Add		::= Mult [ ( "+" | "-" ) Add ]
-	private Mult	   ::= Unary [ ( "*" | "/" | "%" ) Mult ]
-	private Unary	  ::= [ "-" | "!" | "~" | "+" ] Value
+	private Add        ::= Mult [ ( "+" | "-" ) Add ]
+	private Mult       ::= Unary [ ( "*" | "/" | "%" ) Mult ]
+	private Unary      ::= [ "-" | "!" | "~" | "+" ] Value
 //}
-private SimpleValue	  ::= INTEGER_LITERAL | ReferenceNode
-private Value			::= INTEGER_LITERAL | FLOAT_LITERAL | STRING_LITERAL | FuncCall | ComplexReference | ( "(" Expression ")" )
+private SimpleValue      ::= INTEGER_LITERAL | ReferenceNode
+private Value            ::= INTEGER_LITERAL | FLOAT_LITERAL | STRING_LITERAL | FuncCall | ComplexReference | ( "(" Expression ")" )
 private ComplexReference ::= ComplexReferenceNode [ "." ComplexReferenceNode ]
 //{
 	private ComplexReferenceNode ::= ReferenceNode [ "[" SimpleValue "]" ]
-	private TypeReference		::= ReferenceNode | "void" | "int" | "float" | "string" | "func" //func because "const func PLAYER_PERC_ASSESSMAGIC = B_AssessMagic;"
-	ReferenceNode				::= IDENTIFIER_TOKEN
+	private TypeReference        ::= ReferenceNode | "void" | "int" | "float" | "string" | "func" //func because "const func PLAYER_PERC_ASSESSMAGIC = B_AssessMagic;"
+	ReferenceNode                ::= IDENTIFIER_TOKEN
 //}
 NameNode ::= IDENTIFIER_TOKEN
