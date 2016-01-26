@@ -17,12 +17,13 @@ import static org.avallach.gothic.parser.psi.DaedalusTypes.*;
 %function advance
 %type IElementType
 %unicode
+%ignorecase
 
 EOL="\r"|"\n"|"\r\n"
 LINE_WS=[\ \t\f]
 WHITE_SPACE=({LINE_WS}|{EOL})+
 
-IDENTIFIER_TOKEN=[a-zA-Z_][a-zA-Z0-9_]*
+IDENTIFIER_TOKEN=[:jletterdigit:]+
 STRING_LITERAL=\"[^\r\n\"]*\"
 INTEGER_LITERAL=[0-9]+
 FLOAT_LITERAL=[0-9]+\.[0-9]+

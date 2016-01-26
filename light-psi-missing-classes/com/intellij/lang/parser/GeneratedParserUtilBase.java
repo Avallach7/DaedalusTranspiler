@@ -11,6 +11,6 @@ package com.intellij.lang.parser;
  * 
  * @see org.intellij.grammar.parser.GeneratedParserUtilBase
  */
-public class GeneratedParserUtilBase
+public class GeneratedParserUtilBase extends org.intellij.grammar.parser.GeneratedParserUtilBase
 {
 }

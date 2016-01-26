@@ -6,7 +6,6 @@
 	psiPackage = "org.avallach.gothic.parser.psi"
 	psiImplPackage = "org.avallach.gothic.parser.psi.impl"
 
-
 	elementTypeHolderClass="org.avallach.gothic.parser.psi.DaedalusTypes" //will be generated
 	elementTypeClass = "org.avallach.gothic.parser.psi.DaedalusElementType"
 	tokenTypeClass = "org.avallach.gothic.parser.psi.DaedalusTokenType"
@@ -95,7 +94,7 @@
         //}
         //REGEX_TOKENS
         //{
-            IDENTIFIER_TOKEN = "regexp:[a-zA-Z_][a-zA-Z0-9_]*"
+            IDENTIFIER_TOKEN = "regexp:[:jletterdigit:]+"
             STRING_LITERAL = "regexp:\"[^\r\n\"]*\""
             INTEGER_LITERAL = "regexp:[0-9]+"
             FLOAT_LITERAL = "regexp:[0-9]+\.[0-9]+"
@@ -106,31 +105,32 @@
     ]
 }
 
-private DaedalusFile ::= { ( FunctionDef | ConstDef | VarDecl | ClassDef | PrototypeDef | InstanceDef ) ";" }*
+private DaedalusFile ::= { ( FunctionDef | ConstDef | VarDecl | ClassDef | PrototypeDef | InstanceDef | InstanceDecl ) ";" }*
 //{
     FunctionDef ::= "func" TypeReference NameNode ParameterList StatementBlock {pin=1}
     //{
-        ParameterList  ::= "(" [ VarDecl { "," VarDecl }* ] ")" {pin=1}
-        StatementBlock ::= "{" { FuncCall | Assignment | IfBlock | ReturnStatement | ConstDef | VarDecl | ";" }* "}"
+        private ParameterList  ::= "(" [ VarDecl { "," VarDecl }* ] ")" {pin=1}
+        private StatementBlock ::= "{" { ( FuncCall | Assignment | IfBlock | ReturnStatement | ConstDef | VarDecl | Expression ) [ ";" ] }* "}" //Expression present because "gorn.aivar[aiv_findable]==true;", semicolon optional because "else if (Thorus_MordragKo == LOG_FAILED){}"
         //{
-            FuncCall        ::= ReferenceNode "(" [ Expression { "," Expression }* ] ")" {pin=2}
-            Assignment      ::= ComplexReference ( "=" | "+=" | "-=" | "*=" | "/=" ) Expression {pin=2}
+            private FuncCall        ::= ReferenceNode "(" [ Expression { "," Expression }* ] ")" {pin=2} //Expression "PrintDebugInt(bodystate&(BS_MAX|BS_FLAG_INTERRUPTABLE|BS_FLAG_FREEHANDS));"
+            private Assignment      ::= ComplexReference ( "=" | "+=" | "-=" | "*=" | "/=" ) Expression {pin=2}
             IfBlock         ::= "if" Expression StatementBlock { "else" "if" Expression StatementBlock }* [ "else" StatementBlock ] {pin=1}
             ReturnStatement ::= "return" [ Expression ] {pin=1}
         //}
     //}
-    ConstDef ::= "const" TypeReference NameNode [ "[" Value "]" ] ConstAssignment {pin=1}
+    ConstDef ::= "const" TypeReference NameNode [ "[" SimpleValue "]" ] ConstAssignment {pin=1}
     //{
-        ConstAssignment ::= "=" ( Expression | ArrayLiteral )
-        ArrayLiteral    ::= "{" [ Expression { "," Expression }* ] "}"
+        private ConstAssignment ::= "=" ( Expression | ArrayLiteral )
+        private ArrayLiteral    ::= "{" [ Expression { "," Expression }* ] "}"
     //}
-    VarDecl      ::= "var" TypeReference NameNode [ "[" Value "]" ] {pin=1}
+    VarDecl      ::= "var" TypeReference NameNode [ "[" SimpleValue "]" | { "," NameNode }* ] {pin=1} //multiple names: "var int guild, level;", var array used in ClassDefs: "VAR INT move[MAX_MOVE];"
     ClassDef     ::= "class" NameNode "{" { VarDecl ";" }* "}" {pin=1}
-    PrototypeDef ::= "prototype" NameNode "(" ReferenceNode ")" [ "{" { ( VarDecl /*| CallExp*/ ) ";" }* "}" ] {pin=1}
-    InstanceDef  ::= "instance" NameNode { "," NameNode }* "(" ReferenceNode ")" [ "{" { ( VarDecl /*| CallExp*/ ) ";" }* "}" ] {pin=1}
+    PrototypeDef ::= "prototype" NameNode "(" ReferenceNode ")" "{" { ( Assignment | FuncCall ) ";" }* "}" {pin=1} //FuncCall: "prototype npc_default (c_npc) { npc_settalentvalue (self, npc_talent_1h, 0);"
+    InstanceDef  ::= "instance" NameNode "(" ReferenceNode ")" "{" { ( Assignment | FuncCall ) ";" }* "}" {pin=6} //FuncCall: "instance blackgobbomace (mst_default_blackgobbo) { set_blackgobbo_visuals();"
+    InstanceDecl ::= "instance" NameNode { "," NameNode }* "(" ReferenceNode ")" {pin=3} // multiple names and no body: "INSTANCE self,other (C_NPC);"
 //}
 
-Expression ::= LogicAnd [ "||" Expression ]
+private Expression ::= LogicAnd [ "||" Expression ]
 //{
     private LogicAnd   ::= BitOr [ "&&" LogicAnd ]
     private BitOr      ::= BitAnd [ "|" BitOr ]
@@ -142,11 +142,12 @@ Expression ::= LogicAnd [ "||" Expression ]
     private Mult       ::= Unary [ ( "*" | "/" | "%" ) Mult ]
     private Unary      ::= [ "-" | "!" | "~" | "+" ] Value
 //}
-Value            ::= INTEGER_LITERAL | FLOAT_LITERAL | STRING_LITERAL | FuncCall | ComplexReference | ( "(" Expression ")" )
-ComplexReference ::= ComplexReferenceNode { "." ComplexReferenceNode }*
+private SimpleValue      ::= INTEGER_LITERAL | ReferenceNode
+private Value            ::= INTEGER_LITERAL | FLOAT_LITERAL | STRING_LITERAL | FuncCall | ComplexReference | ( "(" Expression ")" )
+private ComplexReference ::= ComplexReferenceNode [ "." ComplexReferenceNode ]
 //{
-    private ComplexReferenceNode ::= ReferenceNode [ "[" ( INTEGER_LITERAL | ReferenceNode ) "]" ]
-    private TypeReference        ::= ReferenceNode | "void" | "int" | "float" | "string" | "func"
+    private ComplexReferenceNode ::= ReferenceNode [ "[" SimpleValue "]" ]
+    private TypeReference        ::= ReferenceNode | "void" | "int" | "float" | "string" | "func" //func because "const func PLAYER_PERC_ASSESSMAGIC = B_AssessMagic;"
     ReferenceNode                ::= IDENTIFIER_TOKEN
 //}
 NameNode ::= IDENTIFIER_TOKEN
