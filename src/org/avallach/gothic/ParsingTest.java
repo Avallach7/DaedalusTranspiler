@@ -1,7 +1,6 @@
 package org.avallach.gothic;
 
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.encoding.EncodingManager;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -15,11 +14,11 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class Transpiler
+public class ParsingTest
 {
     public static void main(String[] args) throws IOException
 	{
-		String sourcesPath = "C:\\Users\\Avallac\\Desktop\\inne\\gothic-skrypty\\Content";
+		String sourcesPath = args[0];
 		Files.find
 		(
 			Paths.get(sourcesPath),
@@ -42,10 +41,6 @@ public class Transpiler
 			{
 				Debug.log(sourcePath + ":" + e.getMessage());
 			}
-
 		});
-		//File sourceFile = new File("D:\\userdata\\Documents\\GitHub\\DaedalusTranspiler\\test\\resources\\org\\avallach\\gothic\\Transpiler\\test.d");
-		//PsiFile psi = LightPsi.parseFile(sourceFile, DaedalusParserDefinition.INSTANCE);
-		//ParserDebug.logPsi(psi);
     }
 }
