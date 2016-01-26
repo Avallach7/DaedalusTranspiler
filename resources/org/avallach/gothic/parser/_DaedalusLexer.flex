@@ -23,7 +23,7 @@ EOL="\r"|"\n"|"\r\n"
 LINE_WS=[\ \t\f]
 WHITE_SPACE=({LINE_WS}|{EOL})+
 
-IDENTIFIER_TOKEN=[:jletterdigit:]+
+IDENTIFIER_TOKEN=[a-zA-Z_][:jletterdigit:]+
 STRING_LITERAL=\"[^\r\n\"]*\"
 INTEGER_LITERAL=[0-9]+
 FLOAT_LITERAL=[0-9]+\.[0-9]+

@@ -66,3 +66,5 @@ CLASS C_FightAI
 const func PLAYER_PERC_ASSESSMAGIC = B_AssessMagic; // func constant
 
 INSTANCE self,other (C_NPC); //multiple names in instance declaration
+
+const int	HAI_DIST_ABORT_MELEE 			= HAI_DIST_MELEE+400; // expression in const value
